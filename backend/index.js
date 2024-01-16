@@ -32,6 +32,7 @@ const requestLogger = (request, response, next) => {
     console.log('Path:  ', request.path)
     console.log('Body:  ', request.body)
     console.log('---')
+    console.log('Temp: First auto deploy with script from package.json')
     next()
 }
 
