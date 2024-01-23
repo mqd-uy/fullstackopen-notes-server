@@ -1,5 +1,8 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
+const mongoose = require('mongoose')
+const Note = require('./models/notes')
 
 const app = express()
 
@@ -32,7 +35,6 @@ const requestLogger = (request, response, next) => {
     console.log('Path:  ', request.path)
     console.log('Body:  ', request.body)
     console.log('---')
-    console.log('Temp: First auto deploy with script from package.json')
     next()
 }
 
@@ -44,16 +46,23 @@ app.get('/', (request, response) => {
 
 app.get('/api/notes', (request, response) => {
     console.log('notes all');
-    response.json(notes)
+    Note.find({}).then(result => {
+        console.log('mongo find all result', result);
+        response.json(result)
+    })
 })
 
 app.get('/api/notes/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const note = notes.find(n => n.id === id)
-    if (note)
-        response.json(note)
-    else
-        response.status(404).end()
+    const id = request.params.id
+    Note.findById(id).then(result => {
+        if (result)
+            response.json(result)
+        else
+            response.status(404).end()
+    }).catch(error => {
+        console.log('find by id error', error);
+        response.status(400).send({ error: 'bad request' })
+    })
 })
 
 app.delete('/api/notes/:id', (request, response) => {
@@ -80,14 +89,14 @@ app.post('/api/notes', (request, response) => {
         })
     }
 
-    const note = {
+    const newNote = new Note({
         content: body.content,
-        important: Boolean(body.important) || false,
-        id: generateId()
-    }
-    console.log(note);
-    notes = notes.concat(note)
-    response.json(note)
+        important: Boolean(body.important) || false
+    })
+    console.log(newNote);
+    newNote.save().then(result => {
+        response.json(result)
+    })
 })
 
 app.get('/test', (req, res) => {
@@ -100,7 +109,7 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint)
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
