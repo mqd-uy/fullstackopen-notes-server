@@ -2,6 +2,6 @@ POST http://localhost:3001/api/notes
 Content-Type: application/json
 
 {
-    "content": "nota enviada desde rest client en vs code",
+    "content": "1",
     "important": true
 }
